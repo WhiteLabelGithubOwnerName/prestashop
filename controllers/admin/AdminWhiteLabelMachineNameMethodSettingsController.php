@@ -137,6 +137,7 @@ class AdminWhiteLabelMachineNameMethodSettingsController extends ModuleAdminCont
             );
         }
 
+        $this->context->smarty->addTemplateDir($this->getTemplatePath());
         $this->context->smarty->assign('methodConfigurations', $methodConfigurations);
     }
 
