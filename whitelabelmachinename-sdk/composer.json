@@ -1,0 +1,35 @@
+{
+    "name": "whitelabelmachinename/sdk",
+    "version": "4.8.0",
+	"description": "WhiteLabelName SDK for PHP",
+	"keywords": [
+		"whitelabelmachinename",
+		"payment",
+		"php",
+		"sdk",
+		"api"
+	],
+	"homepage": "http://github.com/WhiteLabelGithubOwnerName/php-sdk",
+	"license": "Apache-2.0",
+	"authors": [
+		{
+			"name": "WhiteLabelMachineName",
+			"email": "support@whitelabel.com",
+			"homepage": "https://whitelabel-website.com"
+		}
+	],
+	"require": {
+		"php": ">=5.6",
+		"ext-json": "*",
+		"ext-mbstring": "*"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "~8"
+	},
+	"autoload": {
+		"psr-4": { "WhiteLabelMachineName\\Sdk\\" : "lib/" }
+	},
+	"autoload-dev": {
+		"psr-4": { "WhiteLabelMachineName\\Sdk\\" : "test/" }
+	}
+}
