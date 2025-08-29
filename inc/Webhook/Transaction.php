@@ -145,6 +145,9 @@ class WhiteLabelMachineNameWebhookTransaction extends WhiteLabelMachineNameWebho
 
     protected function failed(\WhiteLabelMachineName\Sdk\Model\Transaction $transaction, Order $sourceOrder)
     {
+        if (WhiteLabelMachineNameHelper::getOrderMeta($sourceOrder, 'fulfill')) {
+            return;
+        }
         // Do not send email
         WhiteLabelMachineNameBasemodule::startRecordingMailMessages();
         $errorStatusId = Configuration::get(WhiteLabelMachineNameBasemodule::CK_STATUS_FAILED);
