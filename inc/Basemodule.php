@@ -5,7 +5,7 @@
  * This Prestashop module enables to process payments with WhiteLabelName (https://whitelabel-website.com).
  *
  * @author customweb GmbH (http://www.customweb.com/)
- * @copyright 2017 - 2025 customweb GmbH
+ * @copyright 2017 - 2026 customweb GmbH
  * @license http://www.apache.org/licenses/LICENSE-2.0 Apache Software License (ASL 2.0)
  */
 
@@ -36,6 +36,10 @@ class WhiteLabelMachineNameBasemodule
     const CK_MAIL = 'WLM_SHOP_EMAIL';
 
     const CK_INTEGRATION = 'WLM_SHOP_INTEGRATION';
+
+    const CK_INTEGRATION_TYPE_IFRAME = 0;
+
+    const CK_INTEGRATION_TYPE_PAYMENT_PAGE = 1;
 
     const CK_CART_RECREATION = 'WLM_CART_RECREATION';
 
@@ -85,8 +89,6 @@ class WhiteLabelMachineNameBasemodule
 
     const TOTAL_MODE_WITHOUT_SHIPPING_EXC = 5;
 
-    const CK_RUN_LIMIT = 'WLM_RUN_LIMIT';
-    
     private static $recordMailMessages = false;
 
     private static $recordedMailMessages = array();
@@ -199,8 +201,7 @@ class WhiteLabelMachineNameBasemodule
             Configuration::deleteByName(self::CK_STATUS_COMPLETED) &&
             Configuration::deleteByName(self::CK_STATUS_MANUAL) &&
             Configuration::deleteByName(self::CK_STATUS_DECLINED) &&
-            Configuration::deleteByName(self::CK_STATUS_FULFILL) &&
-            Configuration::deleteByName(self::CK_RUN_LIMIT);
+            Configuration::deleteByName(self::CK_STATUS_FULFILL);
     }
 
 
@@ -281,10 +282,7 @@ class WhiteLabelMachineNameBasemodule
                 $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
             }
             if ($refresh) {
-                $error = Hook::exec('whiteLabelMachineNameSettingsChanged');
-                if (! empty($error)) {
-                    $output .= $module->displayError($error);
-                }
+                $output .= self::executeSettingsChangedHook($module);
             }
         }
         return $output;
@@ -314,7 +312,6 @@ class WhiteLabelMachineNameBasemodule
             self::CK_STATUS_MANUAL,
             self::CK_STATUS_DECLINED,
             self::CK_STATUS_FULFILL,
-            self::CK_RUN_LIMIT,
         );
     }
 
@@ -346,10 +343,7 @@ class WhiteLabelMachineNameBasemodule
                 $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
             }
             if ($refresh) {
-                $error = Hook::exec('whiteLabelMachineNameSettingsChanged');
-                if (! empty($error)) {
-                    $output .= $module->displayError($error);
-                }
+                $output .= self::executeSettingsChangedHook($module);
             }
         }
         return $output;
@@ -362,6 +356,7 @@ class WhiteLabelMachineNameBasemodule
             if (! $module->getContext()->shop->isFeatureActive() || $module->getContext()->shop->getContext() == Shop::CONTEXT_SHOP) {
                 Configuration::updateValue(self::CK_CART_RECREATION, Tools::getValue(self::CK_CART_RECREATION));
                 $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
+                $output .= self::executeSettingsChangedHook($module);
             } else {
                 $output .= $module->displayError(
                     $module->l('You can not store the configuration for all Shops or a Shop Group.', 'basemodule')
@@ -378,6 +373,7 @@ class WhiteLabelMachineNameBasemodule
             if (! $module->getContext()->shop->isFeatureActive() || $module->getContext()->shop->getContext() == Shop::CONTEXT_SHOP) {
                 Configuration::updateValue(self::CK_MAIL, Tools::getValue(self::CK_MAIL));
                 $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
+                $output .= self::executeSettingsChangedHook($module);
             } else {
                 $output .= $module->displayError(
                     $module->l('You can not store the configuration for all Shops or a Shop Group.', 'basemodule')
@@ -400,6 +396,7 @@ class WhiteLabelMachineNameBasemodule
             if (! $module->getContext()->shop->isFeatureActive() || $module->getContext()->shop->getContext() == Shop::CONTEXT_SHOP) {
                 Configuration::updateValue(self::CK_INTEGRATION, Tools::getValue(self::CK_INTEGRATION));
                 $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
+                $output .= self::executeSettingsChangedHook($module);
             } else {
                 $output .= $module->displayError(
                     $module->l('You can not store the configuration for all Shops or a Shop Group.', 'basemodule')
@@ -422,6 +419,7 @@ class WhiteLabelMachineNameBasemodule
                 Configuration::updateValue(self::CK_SURCHARGE_TOTAL, Tools::getValue(self::CK_SURCHARGE_TOTAL));
                 Configuration::updateValue(self::CK_SURCHARGE_BASE, Tools::getValue(self::CK_SURCHARGE_BASE));
                 $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
+                $output .= self::executeSettingsChangedHook($module);
             } else {
                 $output .= $module->displayError(
                     $module->l('You can not store the configuration for all Shops or a Shop Group.', 'basemodule')
@@ -439,6 +437,7 @@ class WhiteLabelMachineNameBasemodule
                 Configuration::updateValue(self::CK_INVOICE, Tools::getValue(self::CK_INVOICE));
                 Configuration::updateValue(self::CK_PACKING_SLIP, Tools::getValue(self::CK_PACKING_SLIP));
                 $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
+                $output .= self::executeSettingsChangedHook($module);
             } else {
                 $output .= $module->displayError(
                     $module->l('You can not store the configuration for all Shops or a Shop Group.', 'basemodule')
@@ -455,6 +454,7 @@ class WhiteLabelMachineNameBasemodule
             if (! $module->getContext()->shop->isFeatureActive() || $module->getContext()->shop->getContext() == Shop::CONTEXT_SHOP) {
                 Configuration::updateValue(self::CK_SPACE_VIEW_ID, Tools::getValue(self::CK_SPACE_VIEW_ID));
                 $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
+                $output .= self::executeSettingsChangedHook($module);
             } else {
                 $output .= $module->displayError(
                     $module->l('You can not store the configuration for all Shops or a Shop Group.', 'basemodule')
@@ -477,28 +477,7 @@ class WhiteLabelMachineNameBasemodule
                 Configuration::updateValue(self::CK_STATUS_DECLINED, Tools::getValue(self::CK_STATUS_DECLINED));
                 Configuration::updateValue(self::CK_STATUS_FULFILL, Tools::getValue(self::CK_STATUS_FULFILL));
                 $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
-            } else {
-                $output .= $module->displayError(
-                    $module->l('You can not store the configuration for all Shops or a Shop Group.', 'basemodule')
-                );
-            }
-        }
-        return $output;
-    }
-
-    /**
-     * Stores de configuration values set for the cron settings form.
-     *
-     * @param WhiteLabelMachineName $module
-     * @return string
-     */
-    public static function handleSaveCronSettings(WhiteLabelMachineName $module)
-    {
-        $output = "";
-        if (Tools::isSubmit('submit' . $module->name . '_email')) {
-            if (! $module->getContext()->shop->isFeatureActive() || $module->getContext()->shop->getContext() == Shop::CONTEXT_SHOP) {
-                Configuration::updateValue(self::CK_RUN_LIMIT, Tools::getValue(self::CK_RUN_LIMIT));
-                $output .= $module->displayConfirmation($module->l('Settings updated', 'basemodule'));
+                $output .= self::executeSettingsChangedHook($module);
             } else {
                 $output .= $module->displayError(
                     $module->l('You can not store the configuration for all Shops or a Shop Group.', 'basemodule')
@@ -684,7 +663,7 @@ class WhiteLabelMachineNameBasemodule
         }
         return $values;
     }
-    
+
     public static function getCartRecreationForm(WhiteLabelMachineName $module)
     {
         $cartRecreationConfig = array(
@@ -755,7 +734,7 @@ class WhiteLabelMachineNameBasemodule
                             'name' => $module->l('Payment page', 'basemodule'),
                             'type' => WhiteLabelMachineNameBasemodule::TOTAL_MODE_BOTH_EXC
                         ),
-                    
+
                     ),
                     'id' => 'type',
                     'name' => 'name'
@@ -1337,68 +1316,6 @@ class WhiteLabelMachineNameBasemodule
         return $values;
     }
 
-    /**
-     * Gets a form with cron configuration settings.
-     *
-     * @param WhiteLabelMachineName $module
-     * @return mixed[]
-     */
-    public static function getCronSettingsForm(WhiteLabelMachineName $module)
-    {
-        $cronSettings = array(
-            array(
-                'type' => 'text',
-                'label' => $module->l('Cron time limit', 'basemodule'),
-                'name' => self::CK_RUN_LIMIT,
-                'required' => false,
-                'col' => 3,
-                'lang' => false,
-                'desc' => $module->l(
-                    'Input the limit that the cron task will run, in seconds. Default: unlimited.',
-                    'basemodule'
-                ),
-            ),
-        );
-    
-        return array(
-            'legend' => array(
-                'title' => $module->l('Cron Settings', 'basemodule')
-            ),
-            'input' => $cronSettings,
-            'buttons' => array(
-                array(
-                    'title' => $module->l('Save All', 'basemodule'),
-                    'class' => 'pull-right',
-                    'type' => 'input',
-                    'icon' => 'process-icon-save',
-                    'name' => 'submit' . $module->name . '_all'
-                ),
-                array(
-                    'title' => $module->l('Save', 'basemodule'),
-                    'class' => 'pull-right',
-                    'type' => 'input',
-                    'icon' => 'process-icon-save',
-                    'name' => 'submit' . $module->name . '_email'
-                )
-            )
-        );
-    }
-
-    /**
-     * Returns an array with the configuration values for the cron settings.
-     *
-     * @param WhiteLabelMachineName $module
-     * @return mixed[]
-     */
-    public static function getCronSettingsConfigValues(WhiteLabelMachineName $module)
-    {
-        $values = array();
-        if (! $module->getContext()->shop->isFeatureActive() || $module->getContext()->shop->getContext() == Shop::CONTEXT_SHOP) {
-            $values[self::CK_RUN_LIMIT] = Configuration::get(self::CK_RUN_LIMIT);
-        }
-        return $values;
-    }
-
     public static function hookWhiteLabelMachineNameSettingsChanged(WhiteLabelMachineName $module, $params)
     {
         try {
@@ -1440,6 +1357,15 @@ class WhiteLabelMachineNameBasemodule
         return "";
     }
 
+    private static function executeSettingsChangedHook(WhiteLabelMachineName $module)
+    {
+        $error = Hook::exec('whiteLabelMachineNameSettingsChanged');
+        if (! empty($error)) {
+            return $module->displayError($error);
+        }
+        return "";
+    }
+
     private static function deleteCachedEntries()
     {
         $toDelete = array(
@@ -1467,7 +1393,7 @@ class WhiteLabelMachineNameBasemodule
         $parameters = array();
         $parameters['methodId'] = $methodConfiguration->getId();
         $parameters['configurationId'] = $methodConfiguration->getConfigurationId();
-        $cart->iframe = (bool) Configuration::get(self::CK_INTEGRATION);
+        $parameters['iframe'] = (bool) Configuration::get(self::CK_INTEGRATION);
 
         $parameters['link'] = $module->getContext()->link->getModuleLink(
             'whitelabelmachinename',
@@ -1636,7 +1562,7 @@ class WhiteLabelMachineNameBasemodule
                     }
                 }
 
-                
+
                 if (strpos($payment_method, "whitelabelmachinename_") === 0) {
                     $id = Tools::substr($payment_method, strpos($payment_method, "_") + 1);
                     $methodConfiguration = new WhiteLabelMachineNameModelMethodconfiguration($id);
@@ -2561,59 +2487,5 @@ class WhiteLabelMachineNameBasemodule
             }
             WhiteLabelMachineNameHelper::commitDBTransaction();
         }
-    }
-    
-    
-    public static function hookDisplayTop(WhiteLabelMachineName $module, $params)
-    {
-        return self::getCronJobItem($module);
-    }
-    
-    public static function getCronJobItem(WhiteLabelMachineName $module)
-    {
-        WhiteLabelMachineNameCron::cleanUpHangingCrons();
-        WhiteLabelMachineNameCron::insertNewPendingCron();
-        
-        $currentToken = WhiteLabelMachineNameCron::getCurrentSecurityTokenForPendingCron();
-        if ($currentToken) {
-            $url = $module->getContext()->link->getModuleLink(
-                'whitelabelmachinename',
-                'cron',
-                array(
-                    'security_token' => $currentToken
-                ),
-                true
-            );
-            return '<img src="' . $url . '" style="display:none" />';
-        }
-    }
-    
-    
-    public static function hookWhiteLabelMachineNameCron($params)
-    {
-        $tasks = array();
-        $tasks[] = 'WhiteLabelMachineNameCron::cleanUpCronDB';
-        $voidService = WhiteLabelMachineNameServiceTransactionvoid::instance();
-        if ($voidService->hasPendingVoids()) {
-            $tasks[] = array(
-                $voidService,
-                "updateVoids"
-            );
-        }
-        $completionService = WhiteLabelMachineNameServiceTransactioncompletion::instance();
-        if ($completionService->hasPendingCompletions()) {
-            $tasks[] = array(
-                $completionService,
-                "updateCompletions"
-            );
-        }
-        $refundService = WhiteLabelMachineNameServiceRefund::instance();
-        if ($refundService->hasPendingRefunds()) {
-            $tasks[] = array(
-                $refundService,
-                "updateRefunds"
-            );
-        }
-        return $tasks;
     }
 }

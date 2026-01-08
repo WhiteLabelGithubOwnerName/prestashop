@@ -5,7 +5,7 @@
  * This Prestashop module enables to process payments with WhiteLabelName (https://whitelabel-website.com).
  *
  * @author customweb GmbH (http://www.customweb.com/)
- * @copyright 2017 - 2025 customweb GmbH
+ * @copyright 2017 - 2026 customweb GmbH
  * @license http://www.apache.org/licenses/LICENSE-2.0 Apache Software License (ASL 2.0)
  */
 
@@ -14,6 +14,20 @@
  */
 class WhiteLabelMachineNameServiceLineitem extends WhiteLabelMachineNameServiceAbstract
 {
+
+    /**
+     * Cached Tax entities keyed by id.
+     *
+     * @var Tax[]
+     */
+    private static $taxCache = array();
+
+    /**
+     * Cached Cart entities keyed by id (used for cart rule checks).
+     *
+     * @var Cart[]
+     */
+    private static $cartCache = array();
 
     /**
      * Returns the line items from the given cart
@@ -76,7 +90,10 @@ class WhiteLabelMachineNameServiceLineitem extends WhiteLabelMachineNameServiceA
             }
             $taxes = array();
             foreach (array_keys($psTaxes) as $id) {
-                $psTax = new Tax($id);
+                $psTax = $this->getTaxFromCache($id);
+                if (! $psTax) {
+                    continue;
+                }
                 $tax = new \WhiteLabelMachineName\Sdk\Model\TaxCreate();
                 $tax->setTitle($psTax->name[$cart->id_lang]);
                 $tax->setRate(round($psTax->rate, 8));
@@ -120,7 +137,10 @@ class WhiteLabelMachineNameServiceLineitem extends WhiteLabelMachineNameServiceA
                 $psTaxes = $shippingTaxCalculator->getTaxesAmount($shippingCostExcl);
                 $taxes = array();
                 foreach (array_keys($psTaxes) as $id) {
-                    $psTax = new Tax($id);
+                    $psTax = $this->getTaxFromCache($id);
+                    if (! $psTax) {
+                        continue;
+                    }
                     $tax = new \WhiteLabelMachineName\Sdk\Model\TaxCreate();
                     $tax->setTitle($psTax->name[$cart->id_lang]);
                     $tax->setRate(round($psTax->rate, 8));
@@ -192,7 +212,10 @@ class WhiteLabelMachineNameServiceLineitem extends WhiteLabelMachineNameServiceA
                 );
                 $taxes = array();
                 foreach (array_keys($psTaxes) as $id) {
-                    $psTax = new Tax($id);
+                    $psTax = $this->getTaxFromCache($id);
+                    if (! $psTax) {
+                        continue;
+                    }
                     $tax = new \WhiteLabelMachineName\Sdk\Model\TaxCreate();
 
                     $tax->setTitle($this->extractTaxName($psTax, $cart));
@@ -388,7 +411,10 @@ class WhiteLabelMachineNameServiceLineitem extends WhiteLabelMachineNameServiceA
                     }
                     $taxes = array();
                     foreach (array_keys($psTaxes) as $id) {
-                        $psTax = new Tax($id);
+                        $psTax = $this->getTaxFromCache($id);
+                        if (! $psTax) {
+                            continue;
+                        }
                         $tax = new \WhiteLabelMachineName\Sdk\Model\TaxCreate();
                         $tax->setTitle($psTax->name[$order->id_lang]);
                         $tax->setRate(round($psTax->rate, 8));
@@ -435,7 +461,10 @@ class WhiteLabelMachineNameServiceLineitem extends WhiteLabelMachineNameServiceA
                     $psTaxes = $shippingTaxCalculator->getTaxesAmount($itemCostsE);
                     $taxes = array();
                     foreach (array_keys($psTaxes) as $id) {
-                        $psTax = new Tax($id);
+                        $psTax = $this->getTaxFromCache($id);
+                        if (! $psTax) {
+                            continue;
+                        }
                         $tax = new \WhiteLabelMachineName\Sdk\Model\TaxCreate();
                         $tax->setTitle($psTax->name[$order->id_lang]);
                         $tax->setRate(round($psTax->rate, 8));
@@ -500,7 +529,10 @@ class WhiteLabelMachineNameServiceLineitem extends WhiteLabelMachineNameServiceA
                 );
                 $taxes = array();
                 foreach (array_keys($psTaxes) as $id) {
-                    $psTax = new Tax($id);
+                    $psTax = $this->getTaxFromCache($id);
+                    if (! $psTax) {
+                        continue;
+                    }
                     $tax = new \WhiteLabelMachineName\Sdk\Model\TaxCreate();
                     $tax->setTitle($psTax->name[$order->id_lang]);
                     $tax->setRate(round($psTax->rate, 8));
@@ -727,9 +759,13 @@ class WhiteLabelMachineNameServiceLineitem extends WhiteLabelMachineNameServiceA
                 $selectedProducts = array();
 
                 if ($reductionProduct == - 2) {
+                    $cartForRule = $this->getCartFromCache($cartIdUsed);
+                    if ($cartForRule === null) {
+                        $cartForRule = new Cart($cartIdUsed);
+                    }
                     $selectedProducts = WhiteLabelMachineNameCartruleaccessor::checkProductRestrictionsStatic(
                         $cartRule,
-                        new Cart($cartIdUsed)
+                        $cartForRule
                     );
                     // Selection of Product
                 }
@@ -897,6 +933,42 @@ class WhiteLabelMachineNameServiceLineitem extends WhiteLabelMachineNameServiceA
         $lineItem->setSku($this->fixLength($lineItem->getSku(), 200));
         $lineItem->setName($this->fixLength($lineItem->getName(), 150));
         return $lineItem;
+    }
+
+    /**
+     * Returns the cached Tax object for the provided ID.
+     *
+     * @param int $taxId
+     * @return Tax|null
+     */
+    private function getTaxFromCache($taxId)
+    {
+        $taxId = (int) $taxId;
+        if ($taxId <= 0) {
+            return null;
+        }
+        if (! isset(self::$taxCache[$taxId])) {
+            self::$taxCache[$taxId] = new Tax($taxId);
+        }
+        return self::$taxCache[$taxId];
+    }
+
+    /**
+     * Returns a cached Cart instance for the given id.
+     *
+     * @param int $cartId
+     * @return Cart|null
+     */
+    private function getCartFromCache($cartId)
+    {
+        $cartId = (int) $cartId;
+        if ($cartId <= 0) {
+            return null;
+        }
+        if (! isset(self::$cartCache[$cartId])) {
+            self::$cartCache[$cartId] = new Cart($cartId);
+        }
+        return self::$cartCache[$cartId];
     }
 
     /**

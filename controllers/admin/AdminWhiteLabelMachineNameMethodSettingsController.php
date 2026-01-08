@@ -5,7 +5,7 @@
  * This Prestashop module enables to process payments with WhiteLabelName (https://whitelabel-website.com).
  *
  * @author customweb GmbH (http://www.customweb.com/)
- * @copyright 2017 - 2025 customweb GmbH
+ * @copyright 2017 - 2026 customweb GmbH
  * @license http://www.apache.org/licenses/LICENSE-2.0 Apache Software License (ASL 2.0)
  */
 
@@ -188,6 +188,7 @@ class AdminWhiteLabelMachineNameMethodSettingsController extends ModuleAdminCont
                 'outputMethodForm'
             )
         );
+        $this->context->smarty->addTemplateDir($this->getTemplatePath());
         $this->context->smarty->assign('formHtml', $form);
     }
 
@@ -227,7 +228,7 @@ class AdminWhiteLabelMachineNameMethodSettingsController extends ModuleAdminCont
                     array(
                         'id' => 'active_on',
                         'value' => 1,
-                        'label' => $this->l('Active', 'adminwhitelabelmachinenamemethodsettingscontroller')
+                        'label' => $this->module->l('Active', 'adminwhitelabelmachinenamemethodsettingscontroller')
                     ),
                     array(
                         'id' => 'active_off',
