@@ -1,7 +1,7 @@
 # PrestaShop 9 WhiteLabelName Integration
 This repository contains the PrestaShop WhiteLabelName payment module that enables the shop to process payments with [WhiteLabelName](https://whitelabel-website.com).
 
-To install module manually by dragging up zip file, please download [.zip archive](https://whitelabel-docs.com/prestashop/2.0.4/whitelabelmachinename.zip) of module with correct structure required by Prestashop installation
+To install module manually by dragging up zip file, please download [.zip archive](https://whitelabel-docs.com/prestashop/2.0.5/whitelabelmachinename.zip) of module with correct structure required by Prestashop installation
 
 ##### To use this extension, a [WhiteLabelName](https://whitelabel-signup.com) account is required.
 
@@ -12,7 +12,7 @@ To install module manually by dragging up zip file, please download [.zip archiv
 
 ## Documentation
 
-* [English](https://whitelabel-docs.com/prestashop/2.0.4/docs/en/documentation.html)
+* [English](https://whitelabel-docs.com/prestashop/2.0.5/docs/en/documentation.html)
 
 ## Support
 
@@ -29,7 +29,7 @@ ____________________________________________________________________________
 
 ## License
 
-Please see the [license file](https://github.com/WhiteLabelGithubOwnerName/prestashop/blob/2.0.4/LICENSE) for more information.
+Please see the [license file](https://github.com/WhiteLabelGithubOwnerName/prestashop/blob/2.0.5/LICENSE) for more information.
 
 ## Other PrestaShop Versions
 

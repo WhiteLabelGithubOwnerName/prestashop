@@ -32,22 +32,29 @@ jQuery(function ($) {
 
         modify_content : function () {
             $(".whitelabelmachinename-method-data").each(function (key, element) {
-                var infoId = $(element).closest('div.additional-information').attr('id');
+                var infoId = $(element).closest(
+                    '.js-additional-information, .payment-option__additional-information, .additional-information, div[id$="-additional-information"]'
+                ).attr('id');
                 var psId = infoId.substring(0, infoId.indexOf('-additional-information'));
                 var psContainer = $('#'+psId+'-container');
-                psContainer.children('label').children('img').addClass('whitelabelmachinename-image');
+                var $label = psContainer.find('label[for="' + psId + '"]').first();
+                $label.find('img').addClass('whitelabelmachinename-image');
                 psContainer.addClass('whitelabelmachinename-payment-option');
                 var fee = $(element).closest("div.additional-information").find(".whitelabelmachinename-payment-fee");
-                psContainer.children("label").append(fee);
+                $label.append(fee);
                 $("#"+psId).data("whitelabelmachinename-method-id", $(element).data("method-id")).data("whitelabelmachinename-configuration-id", $(element).data("configuration-id"));
             });
         },
 
         add_listeners : function () {
             var self = this;
-            $("input[name='payment-option']").off("click.whitelabelmachinename").on("click.whitelabelmachinename", {
-                self : this
-                }, this.payment_method_click);
+            $(document)
+                .off("change.whitelabelmachinename", "input[name='payment-option']")
+                .on(
+                    "change.whitelabelmachinename", "input[name='payment-option']", 
+                    { self: this },
+                    this.payment_method_click
+                );
             $('form.whitelabelmachinename-payment-form').each(function () {
                 this.originalSubmit = this.submit;
                 this.submit = function (evt) {
