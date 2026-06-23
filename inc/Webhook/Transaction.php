@@ -87,7 +87,8 @@ class WhiteLabelMachineNameWebhookTransaction extends WhiteLabelMachineNameWebho
             $order->setCurrentState($authorizedStatusId);
             $order->save();
         }
-        WhiteLabelMachineNameBasemodule::stopRecordingMailMessages();
+        $recordedMessages = WhiteLabelMachineNameBasemodule::stopRecordingMailMessages();
+        WhiteLabelMachineNameHelper::storeDeferredEmails($recordedMessages, $sourceOrder);
         if (Configuration::get(WhiteLabelMachineNameBasemodule::CK_MAIL, null, null, $sourceOrder->id_shop)) {
             // Send stored messages
             $messages = WhiteLabelMachineNameHelper::getOrderEmails($sourceOrder);
@@ -121,7 +122,8 @@ class WhiteLabelMachineNameWebhookTransaction extends WhiteLabelMachineNameWebho
                 $order->save();
             }
         }
-        WhiteLabelMachineNameBasemodule::stopRecordingMailMessages();
+        $recordedMessages = WhiteLabelMachineNameBasemodule::stopRecordingMailMessages();
+        WhiteLabelMachineNameHelper::storeDeferredEmails($recordedMessages, $sourceOrder);
         WhiteLabelMachineNameServiceTransaction::instance()->updateTransactionInfo($transaction, $sourceOrder);
     }
 
@@ -141,6 +143,7 @@ class WhiteLabelMachineNameWebhookTransaction extends WhiteLabelMachineNameWebho
         }
         WhiteLabelMachineNameBasemodule::stopRecordingMailMessages();
         WhiteLabelMachineNameServiceTransaction::instance()->updateTransactionInfo($transaction, $sourceOrder);
+        WhiteLabelMachineNameHelper::deleteOrderEmails($order, WhiteLabelMachineNameBasemodule::EMAIL_KEY_DOWNLOAD);
     }
 
     protected function failed(\WhiteLabelMachineName\Sdk\Model\Transaction $transaction, Order $sourceOrder)
@@ -157,6 +160,7 @@ class WhiteLabelMachineNameWebhookTransaction extends WhiteLabelMachineNameWebho
         WhiteLabelMachineNameBasemodule::stopRecordingMailMessages();
         WhiteLabelMachineNameHelper::deleteOrderEmails($sourceOrder);
         WhiteLabelMachineNameServiceTransaction::instance()->updateTransactionInfo($transaction, $sourceOrder);
+        WhiteLabelMachineNameHelper::deleteOrderEmails($order, WhiteLabelMachineNameBasemodule::EMAIL_KEY_DOWNLOAD);
     }
 
     protected function fulfill(\WhiteLabelMachineName\Sdk\Model\Transaction $transaction, Order $sourceOrder)
@@ -178,6 +182,7 @@ class WhiteLabelMachineNameWebhookTransaction extends WhiteLabelMachineNameWebho
         }
         WhiteLabelMachineNameBasemodule::stopRecordingMailMessages();
         WhiteLabelMachineNameServiceTransaction::instance()->updateTransactionInfo($transaction, $sourceOrder);
+        WhiteLabelMachineNameHelper::sendDeferredEmails($sourceOrder);
     }
 
     protected function voided(\WhiteLabelMachineName\Sdk\Model\Transaction $transaction, Order $sourceOrder)
@@ -195,5 +200,6 @@ class WhiteLabelMachineNameWebhookTransaction extends WhiteLabelMachineNameWebho
         }
         WhiteLabelMachineNameBasemodule::stopRecordingMailMessages();
         WhiteLabelMachineNameServiceTransaction::instance()->updateTransactionInfo($transaction, $sourceOrder);
+        WhiteLabelMachineNameHelper::deleteOrderEmails($order, WhiteLabelMachineNameBasemodule::EMAIL_KEY_DOWNLOAD);
     }
 }
